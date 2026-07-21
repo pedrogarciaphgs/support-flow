@@ -1,3 +1,6 @@
+"use client";
+
+import { usePathname } from "next/navigation";
 import {
   ChartNoAxesCombined,
   CircleUserRound,
@@ -38,6 +41,7 @@ const menuItems = [
 ];
 
 export function Sidebar() {
+  const pathname = usePathname();
   return (
     <aside className="flex min-h-screen w-64 flex-col bg-slate-950 px-4 py-6 text-white">
       <div className="mb-10 flex items-center gap-3 px-2">
@@ -60,20 +64,25 @@ export function Sidebar() {
       </div>
 
       <nav className="space-y-2">
-        {menuItems.map(({ label, icon: Icon, href }, index) => (
-          <Link
-            key={label}
-            href={href}
-            className={`flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-sm transition ${
-              index === 0
-                ? "bg-indigo-600 text-white"
-                : "text-slate-300 hover:bg-slate-900 hover:text-white"
-            }`}
-          >
-            <Icon size={19} />
-            {label}
-          </Link>
-        ))}
+        {menuItems.map(({ label, icon: Icon, href }) => {
+          const isActive =
+            href === "/" ? pathname === "/" : pathname.startsWith(href);
+
+          return (
+            <Link
+              key={label}
+              href={href}
+              className={`flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-sm transition ${
+                isActive
+                  ? "bg-indigo-600 text-white"
+                  : "text-slate-300 hover:bg-slate-900 hover:text-white"
+              }`}
+            >
+              <Icon size={19} />
+              {label}
+            </Link>
+          );
+        })}
       </nav>
     </aside>
   );
