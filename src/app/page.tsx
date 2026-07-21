@@ -3,6 +3,7 @@ import { CircleCheckBig, Clock3, Headphones, TicketCheck } from "lucide-react";
 import { SummaryCard } from "@/components/dashboard/summary-card";
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
+import { RecentTickets } from "@/components/dashboard/recent-tickets";
 
 const summaryCards = [
   {
@@ -51,6 +52,7 @@ export default function Home() {
               />
             ))}
           </div>
+          <RecentTickets />
         </div>
       </section>
     </main>

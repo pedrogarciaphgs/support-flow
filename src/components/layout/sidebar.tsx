@@ -7,26 +7,33 @@ import {
   Users,
 } from "lucide-react";
 
+import Link from "next/link";
+
 const menuItems = [
   {
     label: "Dashboard",
     icon: LayoutDashboard,
+    href: "/",
   },
   {
     label: "Chamados",
     icon: TicketCheck,
+    href: "/tickets",
   },
   {
     label: "Usuários",
     icon: Users,
+    href: "/users",
   },
   {
     label: "Relatórios",
     icon: ChartNoAxesCombined,
+    href: "/reports",
   },
   {
     label: "Configurações",
     icon: Settings,
+    href: "/settings",
   },
 ];
 
@@ -53,9 +60,10 @@ export function Sidebar() {
       </div>
 
       <nav className="space-y-2">
-        {menuItems.map(({ label, icon: Icon }, index) => (
-          <button
+        {menuItems.map(({ label, icon: Icon, href }, index) => (
+          <Link
             key={label}
+            href={href}
             className={`flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-sm transition ${
               index === 0
                 ? "bg-indigo-600 text-white"
@@ -64,7 +72,7 @@ export function Sidebar() {
           >
             <Icon size={19} />
             {label}
-          </button>
+          </Link>
         ))}
       </nav>
     </aside>
