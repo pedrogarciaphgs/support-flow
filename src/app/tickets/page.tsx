@@ -1,5 +1,5 @@
 import { Filter, Plus, Search } from "lucide-react";
-
+import Link from "next/link";
 import { Sidebar } from "@/components/layout/sidebar";
 
 const tickets = [
@@ -77,10 +77,13 @@ export default function TicketsPage() {
               </p>
             </div>
 
-            <button className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-700">
+            <Link
+              href="/tickets/new"
+              className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-700"
+            >
               <Plus size={18} />
               Novo chamado
-            </button>
+            </Link>
           </div>
         </header>
 
