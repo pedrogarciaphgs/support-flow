@@ -1,48 +1,18 @@
-import { Filter, Plus, Search } from "lucide-react";
 import Link from "next/link";
-import { Sidebar } from "@/components/layout/sidebar";
+import { Filter, Plus, Search } from "lucide-react";
 
-const tickets = [
-  {
-    id: "SUP-001",
-    title: "Erro ao acessar o sistema",
-    requester: "Ana Martins",
-    priority: "Alta",
-    status: "Aberto",
-    createdAt: "Hoje, 09:30",
-  },
-  {
-    id: "SUP-002",
-    title: "Problema na redefinição de senha",
-    requester: "Carlos Silva",
-    priority: "Média",
-    status: "Em andamento",
-    createdAt: "Hoje, 08:15",
-  },
-  {
-    id: "SUP-003",
-    title: "Computador sem acesso à internet",
-    requester: "Mariana Costa",
-    priority: "Alta",
-    status: "Em andamento",
-    createdAt: "Ontem, 16:40",
-  },
-  {
-    id: "SUP-004",
-    title: "Instalação de novo software",
-    requester: "João Ferreira",
-    priority: "Baixa",
-    status: "Resolvido",
-    createdAt: "Ontem, 14:10",
-  },
-];
+import { Sidebar } from "@/components/layout/sidebar";
+import { prisma } from "@/lib/prisma";
 
 function getPriorityStyle(priority: string) {
   switch (priority) {
-    case "Alta":
+    case "HIGH":
+    case "URGENT":
       return "bg-red-100 text-red-700";
-    case "Média":
+
+    case "MEDIUM":
       return "bg-yellow-100 text-yellow-700";
+
     default:
       return "bg-slate-100 text-slate-700";
   }
@@ -50,18 +20,64 @@ function getPriorityStyle(priority: string) {
 
 function getStatusStyle(status: string) {
   switch (status) {
-    case "Aberto":
+    case "OPEN":
       return "bg-blue-100 text-blue-700";
-    case "Em andamento":
+
+    case "IN_PROGRESS":
       return "bg-indigo-100 text-indigo-700";
-    case "Resolvido":
+
+    case "RESOLVED":
       return "bg-emerald-100 text-emerald-700";
+
     default:
       return "bg-slate-100 text-slate-700";
   }
 }
 
-export default function TicketsPage() {
+function formatPriority(priority: string) {
+  const labels = {
+    LOW: "Baixa",
+    MEDIUM: "Média",
+    HIGH: "Alta",
+    URGENT: "Urgente",
+  };
+
+  return labels[priority as keyof typeof labels] ?? priority;
+}
+
+function formatStatus(status: string) {
+  const labels = {
+    OPEN: "Aberto",
+    IN_PROGRESS: "Em andamento",
+    RESOLVED: "Resolvido",
+    CLOSED: "Fechado",
+  };
+
+  return labels[status as keyof typeof labels] ?? status;
+}
+
+function formatDate(date: Date) {
+  return new Intl.DateTimeFormat("pt-PT", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(date);
+}
+
+export default async function TicketsPage() {
+  const tickets = await prisma.ticket.findMany({
+    orderBy: {
+      createdAt: "desc",
+    },
+
+    include: {
+      requester: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  });
+
   return (
     <main className="flex min-h-screen bg-slate-100">
       <Sidebar />
@@ -99,7 +115,7 @@ export default function TicketsPage() {
                 <input
                   type="text"
                   placeholder="Buscar por título ou solicitante..."
-                  className="w-full rounded-lg border border-slate-200 py-2 pl-10 pr-4 text-sm text-slate-900 outline-none focus:border-indigo-500"
+                  className="w-full rounded-lg border border-slate-200 py-2 pl-10 pr-4 text-sm text-slate-900 outline-none transition focus:border-indigo-500"
                 />
               </div>
 
@@ -129,7 +145,7 @@ export default function TicketsPage() {
                     >
                       <td className="px-6 py-4">
                         <span className="block text-xs font-medium text-indigo-600">
-                          #{ticket.id}
+                          #{ticket.id.slice(-6).toUpperCase()}
                         </span>
 
                         <span className="mt-1 block text-sm font-medium text-slate-900">
@@ -138,7 +154,7 @@ export default function TicketsPage() {
                       </td>
 
                       <td className="px-6 py-4 text-sm text-slate-600">
-                        {ticket.requester}
+                        {ticket.requester.name}
                       </td>
 
                       <td className="px-6 py-4">
@@ -147,7 +163,7 @@ export default function TicketsPage() {
                             ticket.priority,
                           )}`}
                         >
-                          {ticket.priority}
+                          {formatPriority(ticket.priority)}
                         </span>
                       </td>
 
@@ -157,15 +173,26 @@ export default function TicketsPage() {
                             ticket.status,
                           )}`}
                         >
-                          {ticket.status}
+                          {formatStatus(ticket.status)}
                         </span>
                       </td>
 
                       <td className="px-6 py-4 text-sm text-slate-500">
-                        {ticket.createdAt}
+                        {formatDate(ticket.createdAt)}
                       </td>
                     </tr>
                   ))}
+
+                  {tickets.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={5}
+                        className="px-6 py-10 text-center text-sm text-slate-500"
+                      >
+                        Nenhum chamado encontrado.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
