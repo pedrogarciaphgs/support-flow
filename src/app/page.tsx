@@ -1,38 +1,62 @@
 import { CircleCheckBig, Clock3, Headphones, TicketCheck } from "lucide-react";
 
+import { RecentTickets } from "@/components/dashboard/recent-tickets";
 import { SummaryCard } from "@/components/dashboard/summary-card";
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
-import { RecentTickets } from "@/components/dashboard/recent-tickets";
+import { prisma } from "@/lib/prisma";
 
-const summaryCards = [
-  {
-    title: "Chamados abertos",
-    value: 24,
-    description: "Aguardando atendimento",
-    icon: TicketCheck,
-  },
-  {
-    title: "Em andamento",
-    value: 12,
-    description: "Sendo atendidos agora",
-    icon: Headphones,
-  },
-  {
-    title: "Resolvidos",
-    value: 48,
-    description: "Resolvidos neste mês",
-    icon: CircleCheckBig,
-  },
-  {
-    title: "Tempo médio",
-    value: 3,
-    description: "Horas por atendimento",
-    icon: Clock3,
-  },
-];
+export default async function Home() {
+  const [openTickets, inProgressTickets, resolvedTickets, totalTickets] =
+    await Promise.all([
+      prisma.ticket.count({
+        where: {
+          status: "OPEN",
+        },
+      }),
 
-export default function Home() {
+      prisma.ticket.count({
+        where: {
+          status: "IN_PROGRESS",
+        },
+      }),
+
+      prisma.ticket.count({
+        where: {
+          status: "RESOLVED",
+        },
+      }),
+
+      prisma.ticket.count(),
+    ]);
+
+  const summaryCards = [
+    {
+      title: "Chamados abertos",
+      value: openTickets,
+      description: "Aguardando atendimento",
+      icon: TicketCheck,
+    },
+    {
+      title: "Em andamento",
+      value: inProgressTickets,
+      description: "Sendo atendidos agora",
+      icon: Headphones,
+    },
+    {
+      title: "Resolvidos",
+      value: resolvedTickets,
+      description: "Chamados já solucionados",
+      icon: CircleCheckBig,
+    },
+    {
+      title: "Total de chamados",
+      value: totalTickets,
+      description: "Registrados no sistema",
+      icon: Clock3,
+    },
+  ];
+
   return (
     <main className="flex min-h-screen bg-slate-100">
       <Sidebar />
@@ -52,6 +76,7 @@ export default function Home() {
               />
             ))}
           </div>
+
           <RecentTickets />
         </div>
       </section>
