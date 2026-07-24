@@ -1,7 +1,17 @@
 import Link from "next/link";
-import { Filter, Plus, Search } from "lucide-react";
+import { Plus } from "lucide-react";
+
 import { Sidebar } from "@/components/layout/sidebar";
+import { TicketFilters } from "@/components/tickets/ticket-filters";
 import { prisma } from "@/lib/prisma";
+
+type TicketsPageProps = {
+  searchParams: Promise<{
+    search?: string;
+    status?: string;
+    priority?: string;
+  }>;
+};
 
 function getPriorityStyle(priority: string) {
   switch (priority) {
@@ -62,8 +72,57 @@ function formatDate(date: Date) {
   }).format(date);
 }
 
-export default async function TicketsPage() {
+export default async function TicketsPage({ searchParams }: TicketsPageProps) {
+  const filters = await searchParams;
+
+  const search = filters.search?.trim() ?? "";
+  const status = filters.status;
+  const priority = filters.priority;
+
   const tickets = await prisma.ticket.findMany({
+    where: {
+      ...(status
+        ? {
+            status: status as "OPEN" | "IN_PROGRESS" | "RESOLVED" | "CLOSED",
+          }
+        : {}),
+
+      ...(priority
+        ? {
+            priority: priority as "LOW" | "MEDIUM" | "HIGH" | "URGENT",
+          }
+        : {}),
+
+      ...(search
+        ? {
+            OR: [
+              {
+                title: {
+                  contains: search,
+                  mode: "insensitive",
+                },
+              },
+              {
+                description: {
+                  contains: search,
+                  mode: "insensitive",
+                },
+              },
+              {
+                requester: {
+                  is: {
+                    name: {
+                      contains: search,
+                      mode: "insensitive",
+                    },
+                  },
+                },
+              },
+            ],
+          }
+        : {}),
+    },
+
     orderBy: {
       createdAt: "desc",
     },
@@ -104,34 +163,20 @@ export default async function TicketsPage() {
 
         <div className="p-8">
           <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div className="flex flex-col gap-4 border-b border-slate-200 p-6 md:flex-row md:items-center md:justify-between">
-              <div className="relative w-full md:max-w-md">
-                <Search
-                  size={18}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                />
-
-                <input
-                  type="text"
-                  placeholder="Buscar por título ou solicitante..."
-                  className="w-full rounded-lg border border-slate-200 py-2 pl-10 pr-4 text-sm text-slate-900 outline-none transition focus:border-indigo-500"
-                />
-              </div>
-
-              <button className="flex items-center justify-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50">
-                <Filter size={18} />
-                Filtros
-              </button>
-            </div>
+            <TicketFilters />
 
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead className="bg-slate-50 text-xs uppercase text-slate-500">
                   <tr>
                     <th className="px-6 py-4 font-medium">Chamado</th>
+
                     <th className="px-6 py-4 font-medium">Solicitante</th>
+
                     <th className="px-6 py-4 font-medium">Prioridade</th>
+
                     <th className="px-6 py-4 font-medium">Status</th>
+
                     <th className="px-6 py-4 font-medium">Criado em</th>
                   </tr>
                 </thead>
@@ -140,7 +185,7 @@ export default async function TicketsPage() {
                   {tickets.map((ticket) => (
                     <tr
                       key={ticket.id}
-                      className="cursor-pointer transition hover:bg-slate-50"
+                      className="transition hover:bg-slate-50"
                     >
                       <td className="px-6 py-4">
                         <Link
@@ -193,7 +238,9 @@ export default async function TicketsPage() {
                         colSpan={5}
                         className="px-6 py-10 text-center text-sm text-slate-500"
                       >
-                        Nenhum chamado encontrado.
+                        {search || status || priority
+                          ? "Nenhum chamado corresponde aos filtros selecionados."
+                          : "Nenhum chamado encontrado."}
                       </td>
                     </tr>
                   )}
