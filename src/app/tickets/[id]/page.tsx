@@ -8,6 +8,7 @@ import {
   Tag,
   UserRoundCog,
 } from "lucide-react";
+import { CreateCommentForm } from "@/components/tickets/create-comment-form";
 
 import { Sidebar } from "@/components/layout/sidebar";
 import { prisma } from "@/lib/prisma";
@@ -227,31 +228,7 @@ export default async function TicketDetailsPage({
                   </p>
                 )}
 
-                <form className="border-t border-slate-200 pt-6">
-                  <label
-                    htmlFor="comment"
-                    className="mb-2 block text-sm font-medium text-slate-700"
-                  >
-                    Adicionar comentário
-                  </label>
-
-                  <textarea
-                    id="comment"
-                    name="comment"
-                    rows={4}
-                    placeholder="Escreva uma atualização sobre o chamado..."
-                    className="w-full resize-none rounded-lg border border-slate-200 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
-                  />
-
-                  <div className="mt-3 flex justify-end">
-                    <button
-                      type="submit"
-                      className="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-indigo-700"
-                    >
-                      Enviar comentário
-                    </button>
-                  </div>
-                </form>
+                <CreateCommentForm ticketId={ticket.id} />
               </div>
             </section>
           </div>
