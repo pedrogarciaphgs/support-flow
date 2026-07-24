@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Filter, Plus, Search } from "lucide-react";
-
 import { Sidebar } from "@/components/layout/sidebar";
 import { prisma } from "@/lib/prisma";
 
@@ -144,13 +143,18 @@ export default async function TicketsPage() {
                       className="cursor-pointer transition hover:bg-slate-50"
                     >
                       <td className="px-6 py-4">
-                        <span className="block text-xs font-medium text-indigo-600">
-                          #{ticket.id.slice(-6).toUpperCase()}
-                        </span>
+                        <Link
+                          href={`/tickets/${ticket.id}`}
+                          className="group block"
+                        >
+                          <span className="block text-xs font-medium text-indigo-600">
+                            #{ticket.id.slice(-6).toUpperCase()}
+                          </span>
 
-                        <span className="mt-1 block text-sm font-medium text-slate-900">
-                          {ticket.title}
-                        </span>
+                          <span className="mt-1 block text-sm font-medium text-slate-900 transition group-hover:text-indigo-600">
+                            {ticket.title}
+                          </span>
+                        </Link>
                       </td>
 
                       <td className="px-6 py-4 text-sm text-slate-600">
