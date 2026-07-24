@@ -9,6 +9,7 @@ import {
   UserRoundCog,
 } from "lucide-react";
 import { CreateCommentForm } from "@/components/tickets/create-comment-form";
+import { UpdateTicketForm } from "@/components/tickets/update-ticket-form";
 
 import { Sidebar } from "@/components/layout/sidebar";
 import { prisma } from "@/lib/prisma";
@@ -129,6 +130,23 @@ export default async function TicketDetailsPage({
           },
         },
       },
+    },
+  });
+
+  const agents = await prisma.user.findMany({
+    where: {
+      role: {
+        in: ["ADMIN", "AGENT"],
+      },
+    },
+
+    orderBy: {
+      name: "asc",
+    },
+
+    select: {
+      id: true,
+      name: true,
     },
   });
 
@@ -336,6 +354,12 @@ export default async function TicketDetailsPage({
                   </p>
                 </div>
               </div>
+              <UpdateTicketForm
+                ticketId={ticket.id}
+                currentStatus={ticket.status}
+                currentAssignedToId={ticket.assignedToId}
+                agents={agents}
+              />
             </div>
           </aside>
         </div>
