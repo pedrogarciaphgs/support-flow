@@ -3,13 +3,19 @@ import { Plus } from "lucide-react";
 
 import { Sidebar } from "@/components/layout/sidebar";
 import { TicketFilters } from "@/components/tickets/ticket-filters";
+import { TicketPagination } from "@/components/tickets/ticket-pagination";
 import { prisma } from "@/lib/prisma";
+
+type TicketStatus = "OPEN" | "IN_PROGRESS" | "RESOLVED" | "CLOSED";
+
+type TicketPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 
 type TicketsPageProps = {
   searchParams: Promise<{
     search?: string;
     status?: string;
     priority?: string;
+    page?: string;
   }>;
 };
 
@@ -79,62 +85,81 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
   const status = filters.status;
   const priority = filters.priority;
 
-  const tickets = await prisma.ticket.findMany({
-    where: {
-      ...(status
-        ? {
-            status: status as "OPEN" | "IN_PROGRESS" | "RESOLVED" | "CLOSED",
-          }
-        : {}),
+  const pageSize = 5;
+  const requestedPage = Number(filters.page ?? "1");
 
-      ...(priority
-        ? {
-            priority: priority as "LOW" | "MEDIUM" | "HIGH" | "URGENT",
-          }
-        : {}),
+  const currentPage =
+    Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
 
-      ...(search
-        ? {
-            OR: [
-              {
-                title: {
-                  contains: search,
-                  mode: "insensitive",
-                },
+  const where = {
+    ...(status
+      ? {
+          status: status as TicketStatus,
+        }
+      : {}),
+
+    ...(priority
+      ? {
+          priority: priority as TicketPriority,
+        }
+      : {}),
+
+    ...(search
+      ? {
+          OR: [
+            {
+              title: {
+                contains: search,
+                mode: "insensitive" as const,
               },
-              {
-                description: {
-                  contains: search,
-                  mode: "insensitive",
-                },
+            },
+            {
+              description: {
+                contains: search,
+                mode: "insensitive" as const,
               },
-              {
-                requester: {
-                  is: {
-                    name: {
-                      contains: search,
-                      mode: "insensitive",
-                    },
+            },
+            {
+              requester: {
+                is: {
+                  name: {
+                    contains: search,
+                    mode: "insensitive" as const,
                   },
                 },
               },
-            ],
-          }
-        : {}),
-    },
+            },
+          ],
+        }
+      : {}),
+  };
 
-    orderBy: {
-      createdAt: "desc",
-    },
+  const [tickets, totalTickets] = await Promise.all([
+    prisma.ticket.findMany({
+      where,
 
-    include: {
-      requester: {
-        select: {
-          name: true,
+      skip: (currentPage - 1) * pageSize,
+      take: pageSize,
+
+      orderBy: {
+        createdAt: "desc",
+      },
+
+      include: {
+        requester: {
+          select: {
+            name: true,
+          },
         },
       },
-    },
-  });
+    }),
+
+    prisma.ticket.count({
+      where,
+    }),
+  ]);
+
+  const totalPages = Math.max(1, Math.ceil(totalTickets / pageSize));
 
   return (
     <main className="flex min-h-screen bg-slate-100">
@@ -247,6 +272,11 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
                 </tbody>
               </table>
             </div>
+
+            <TicketPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+            />
           </div>
         </div>
       </section>
