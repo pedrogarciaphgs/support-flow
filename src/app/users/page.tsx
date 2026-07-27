@@ -1,7 +1,7 @@
-import { ShieldCheck, UserRound, UsersRound } from "lucide-react";
-
 import { Sidebar } from "@/components/layout/sidebar";
 import { prisma } from "@/lib/prisma";
+import Link from "next/link";
+import { Plus, ShieldCheck, UserRound, UsersRound } from "lucide-react";
 
 function formatRole(role: string) {
   const labels = {
@@ -61,12 +61,22 @@ export default async function UsersPage() {
 
       <section className="min-w-0 flex-1">
         <header className="border-b border-slate-200 bg-white px-8 py-5">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">Usuários</h1>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">Usuários</h1>
 
-            <p className="text-sm text-slate-500">
-              Gerencie os usuários cadastrados no sistema
-            </p>
+              <p className="text-sm text-slate-500">
+                Gerencie os usuários cadastrados no sistema
+              </p>
+            </div>
+
+            <Link
+              href="/users/new"
+              className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-700"
+            >
+              <Plus size={18} />
+              Novo usuário
+            </Link>
           </div>
         </header>
 
