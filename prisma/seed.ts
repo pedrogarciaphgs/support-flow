@@ -2,6 +2,7 @@ import "dotenv/config";
 
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
+import { hash } from "bcryptjs";
 
 const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL!,
@@ -10,6 +11,7 @@ const adapter = new PrismaPg({
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
+  const hashedPassword = await hash("123456", 12);
   // Remove os dados antigos na ordem correta por causa das relações.
   await prisma.comment.deleteMany();
   await prisma.ticket.deleteMany();
@@ -19,7 +21,7 @@ async function main() {
     data: {
       name: "Pedro Garcia",
       email: "pedro@supportflow.dev",
-      password: "123456",
+      password: hashedPassword,
       role: "ADMIN",
     },
   });
@@ -28,7 +30,7 @@ async function main() {
     data: {
       name: "Mariana Costa",
       email: "mariana@supportflow.dev",
-      password: "123456",
+      password: hashedPassword,
       role: "AGENT",
     },
   });
@@ -37,7 +39,7 @@ async function main() {
     data: {
       name: "Carlos Silva",
       email: "carlos@supportflow.dev",
-      password: "123456",
+      password: hashedPassword,
       role: "USER",
     },
   });
