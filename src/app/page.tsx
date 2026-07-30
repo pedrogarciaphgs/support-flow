@@ -5,8 +5,16 @@ import { SummaryCard } from "@/components/dashboard/summary-card";
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
 import { prisma } from "@/lib/prisma";
+import { redirect } from "next/navigation";
+
+import { auth } from "@/auth";
 
 export default async function Home() {
+  const session = await auth();
+
+  if (!session?.user) {
+    redirect("/login");
+  }
   const [openTickets, inProgressTickets, resolvedTickets, totalTickets] =
     await Promise.all([
       prisma.ticket.count({
@@ -59,7 +67,12 @@ export default async function Home() {
 
   return (
     <main className="flex min-h-screen bg-slate-100">
-      <Sidebar />
+      <Sidebar
+        user={{
+          name: session.user.name ?? "Usuário",
+          role: session.user.role,
+        }}
+      />
 
       <section className="min-w-0 flex-1">
         <Header />

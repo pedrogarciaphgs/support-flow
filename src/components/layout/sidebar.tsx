@@ -9,8 +9,16 @@ import {
   TicketCheck,
   Users,
 } from "lucide-react";
+import { LogoutButton } from "@/components/auth/logout-button";
 
 import Link from "next/link";
+
+type SidebarProps = {
+  user: {
+    name: string;
+    role: "ADMIN" | "AGENT" | "USER";
+  };
+};
 
 const menuItems = [
   {
@@ -40,7 +48,7 @@ const menuItems = [
   },
 ];
 
-export function Sidebar() {
+export function Sidebar({ user }: SidebarProps) {
   const pathname = usePathname();
   return (
     <aside className="flex min-h-screen w-64 flex-col bg-slate-950 px-4 py-6 text-white">
@@ -58,8 +66,8 @@ export function Sidebar() {
         </div>
 
         <div>
-          <p className="text-sm font-semibold">Pedro Garcia</p>
-          <span className="text-xs text-indigo-300">ADMIN</span>
+          <p className="text-sm font-semibold">{user.name}</p>
+          <span className="text-xs text-indigo-300">{user.role}</span>
         </div>
       </div>
 
@@ -84,6 +92,9 @@ export function Sidebar() {
           );
         })}
       </nav>
+      <div className="mt-auto pt-6">
+        <LogoutButton />
+      </div>
     </aside>
   );
 }
