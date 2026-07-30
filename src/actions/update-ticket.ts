@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { auth } from "@/auth";
 
 const updateTicketSchema = z.object({
   ticketId: z.string().min(1, "Chamado inválido."),
@@ -22,6 +23,21 @@ export async function updateTicket(
   _previousState: UpdateTicketState,
   formData: FormData,
 ): Promise<UpdateTicketState> {
+  const session = await auth();
+
+  if (!session?.user) {
+    return {
+      success: false,
+      message: "Você precisa estar autenticado.",
+    };
+  }
+
+  if (session.user.role !== "ADMIN" && session.user.role !== "AGENT") {
+    return {
+      success: false,
+      message: "Você não possui permissão para atualizar chamados.",
+    };
+  }
   const parsedData = updateTicketSchema.safeParse({
     ticketId: formData.get("ticketId"),
     status: formData.get("status"),

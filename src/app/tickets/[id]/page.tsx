@@ -10,7 +10,8 @@ import {
 } from "lucide-react";
 import { CreateCommentForm } from "@/components/tickets/create-comment-form";
 import { UpdateTicketForm } from "@/components/tickets/update-ticket-form";
-
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
 import { Sidebar } from "@/components/layout/sidebar";
 import { prisma } from "@/lib/prisma";
 
@@ -94,6 +95,12 @@ function formatDate(date: Date) {
 export default async function TicketDetailsPage({
   params,
 }: TicketDetailsPageProps) {
+  const session = await auth();
+
+  if (!session?.user) {
+    redirect("/login");
+  }
+
   const { id } = await params;
 
   const ticket = await prisma.ticket.findUnique({
@@ -156,7 +163,12 @@ export default async function TicketDetailsPage({
 
   return (
     <main className="flex min-h-screen bg-slate-100">
-      <Sidebar />
+      <Sidebar
+        user={{
+          name: session.user.name ?? "Usuário",
+          role: session.user.role,
+        }}
+      />
 
       <section className="min-w-0 flex-1">
         <header className="border-b border-slate-200 bg-white px-8 py-5">
@@ -354,12 +366,15 @@ export default async function TicketDetailsPage({
                   </p>
                 </div>
               </div>
-              <UpdateTicketForm
-                ticketId={ticket.id}
-                currentStatus={ticket.status}
-                currentAssignedToId={ticket.assignedToId}
-                agents={agents}
-              />
+              {(session.user.role === "ADMIN" ||
+                session.user.role === "AGENT") && (
+                <UpdateTicketForm
+                  ticketId={ticket.id}
+                  currentStatus={ticket.status}
+                  currentAssignedToId={ticket.assignedToId}
+                  agents={agents}
+                />
+              )}
             </div>
           </aside>
         </div>

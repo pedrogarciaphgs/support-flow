@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 
 import { prisma } from "@/lib/prisma";
 import { createUserSchema } from "@/schemas/user-schema";
-
+import { auth } from "@/auth";
 export type CreateUserState = {
   success: boolean;
   message: string;
@@ -15,6 +15,21 @@ export async function createUser(
   _previousState: CreateUserState,
   formData: FormData,
 ): Promise<CreateUserState> {
+  const session = await auth();
+
+  if (!session?.user) {
+    return {
+      success: false,
+      message: "Você precisa estar autenticado.",
+    };
+  }
+
+  if (session.user.role !== "ADMIN") {
+    return {
+      success: false,
+      message: "Somente administradores podem criar usuários.",
+    };
+  }
   const parsedData = createUserSchema.safeParse({
     name: formData.get("name"),
     email: formData.get("email"),

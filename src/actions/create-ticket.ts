@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { createTicketSchema } from "@/schemas/ticket-schema";
 
@@ -14,6 +15,15 @@ export async function createTicket(
   _previousState: CreateTicketState,
   formData: FormData,
 ): Promise<CreateTicketState> {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    return {
+      success: false,
+      message: "Você precisa estar autenticado para criar um chamado.",
+    };
+  }
+
   const parsedData = createTicketSchema.safeParse({
     title: formData.get("title"),
     description: formData.get("description"),
@@ -33,14 +43,17 @@ export async function createTicket(
   try {
     const requester = await prisma.user.findUnique({
       where: {
-        email: "carlos@supportflow.dev",
+        id: session.user.id,
+      },
+      select: {
+        id: true,
       },
     });
 
     if (!requester) {
       return {
         success: false,
-        message: "Usuário solicitante não encontrado.",
+        message: "Usuário autenticado não encontrado.",
       };
     }
 
@@ -66,7 +79,7 @@ export async function createTicket(
 
     return {
       success: false,
-      message: "Não foi possível criar o chamado. Tente novamente.",
+      message: "Não foi possível criar o chamado.",
     };
   }
 }

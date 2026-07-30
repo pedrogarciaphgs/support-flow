@@ -1,13 +1,24 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-
 import { Sidebar } from "@/components/layout/sidebar";
 import { CreateUserForm } from "@/components/users/create-user-form";
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
 
-export default function NewUserPage() {
+export default async function NewUserPage() {
+  const session = await auth();
+
+  if (!session?.user) {
+    redirect("/login");
+  }
   return (
     <main className="flex min-h-screen bg-slate-100">
-      <Sidebar />
+      <Sidebar
+        user={{
+          name: session.user.name ?? "Usuário",
+          role: session.user.role,
+        }}
+      />
 
       <section className="min-w-0 flex-1">
         <header className="border-b border-slate-200 bg-white px-8 py-5">

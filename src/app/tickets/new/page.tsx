@@ -3,11 +3,25 @@ import { ArrowLeft } from "lucide-react";
 
 import { Sidebar } from "@/components/layout/sidebar";
 import { CreateTicketForm } from "@/components/tickets/create-ticket-form";
+import { redirect } from "next/navigation";
 
-export default function NewTicketPage() {
+import { auth } from "@/auth";
+
+export async function NewTicketPage() {
+  const session = await auth();
+
+  if (!session?.user) {
+    redirect("/login");
+  }
+
   return (
     <main className="flex min-h-screen bg-slate-100">
-      <Sidebar />
+      <Sidebar
+        user={{
+          name: session.user.name ?? "Usuário",
+          role: session.user.role,
+        }}
+      />
 
       <section className="min-w-0 flex-1">
         <header className="border-b border-slate-200 bg-white px-8 py-5">

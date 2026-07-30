@@ -2,6 +2,8 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { Plus, ShieldCheck, UserRound, UsersRound } from "lucide-react";
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
 
 function formatRole(role: string) {
   const labels = {
@@ -33,6 +35,11 @@ function formatDate(date: Date) {
 }
 
 export default async function UsersPage() {
+  const session = await auth();
+
+  if (!session?.user) {
+    redirect("/login");
+  }
   const users = await prisma.user.findMany({
     orderBy: {
       createdAt: "desc",
@@ -57,7 +64,12 @@ export default async function UsersPage() {
 
   return (
     <main className="flex min-h-screen bg-slate-100">
-      <Sidebar />
+      <Sidebar
+        user={{
+          name: session.user.name ?? "Usuário",
+          role: session.user.role,
+        }}
+      />
 
       <section className="min-w-0 flex-1">
         <header className="border-b border-slate-200 bg-white px-8 py-5">
@@ -70,13 +82,15 @@ export default async function UsersPage() {
               </p>
             </div>
 
-            <Link
-              href="/users/new"
-              className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-700"
-            >
-              <Plus size={18} />
-              Novo usuário
-            </Link>
+            {session.user.role === "ADMIN" && (
+              <Link
+                href="/users/new"
+                className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-700"
+              >
+                <Plus size={18} />
+                Novo usuário
+              </Link>
+            )}
           </div>
         </header>
 

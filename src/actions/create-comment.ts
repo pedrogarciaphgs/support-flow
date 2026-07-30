@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { createCommentSchema } from "@/schemas/comment-schema";
 
@@ -14,6 +15,15 @@ export async function createComment(
   _previousState: CreateCommentState,
   formData: FormData,
 ): Promise<CreateCommentState> {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    return {
+      success: false,
+      message: "Você precisa estar autenticado para comentar.",
+    };
+  }
+
   const parsedData = createCommentSchema.safeParse({
     ticketId: formData.get("ticketId"),
     content: formData.get("content"),
@@ -29,27 +39,32 @@ export async function createComment(
   }
 
   try {
-    const agent = await prisma.user.findUnique({
-      where: {
-        email: "mariana@supportflow.dev",
-      },
-    });
+    const [author, ticket] = await Promise.all([
+      prisma.user.findUnique({
+        where: {
+          id: session.user.id,
+        },
+        select: {
+          id: true,
+        },
+      }),
 
-    if (!agent) {
+      prisma.ticket.findUnique({
+        where: {
+          id: parsedData.data.ticketId,
+        },
+        select: {
+          id: true,
+        },
+      }),
+    ]);
+
+    if (!author) {
       return {
         success: false,
-        message: "Usuário responsável não encontrado.",
+        message: "Usuário autenticado não encontrado.",
       };
     }
-
-    const ticket = await prisma.ticket.findUnique({
-      where: {
-        id: parsedData.data.ticketId,
-      },
-      select: {
-        id: true,
-      },
-    });
 
     if (!ticket) {
       return {
@@ -61,7 +76,7 @@ export async function createComment(
     await prisma.comment.create({
       data: {
         content: parsedData.data.content,
-        authorId: agent.id,
+        authorId: author.id,
         ticketId: ticket.id,
       },
     });
