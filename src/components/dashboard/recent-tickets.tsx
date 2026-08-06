@@ -1,6 +1,14 @@
+import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
+
+type RecentTicketsProps = {
+  user: {
+    id: string;
+    role: "ADMIN" | "AGENT" | "USER";
+  };
+};
 
 function getPriorityStyle(priority: string) {
   switch (priority) {
@@ -54,12 +62,21 @@ function formatStatus(status: string) {
   return labels[status as keyof typeof labels] ?? status;
 }
 
-export async function RecentTickets() {
+export async function RecentTickets({ user }: RecentTicketsProps) {
   const tickets = await prisma.ticket.findMany({
+    where:
+      user.role === "USER"
+        ? {
+            requesterId: user.id,
+          }
+        : undefined,
+
     take: 5,
+
     orderBy: {
       createdAt: "desc",
     },
+
     include: {
       requester: {
         select: {
@@ -82,13 +99,13 @@ export async function RecentTickets() {
           </p>
         </div>
 
-        <a
+        <Link
           href="/tickets"
           className="flex items-center gap-2 text-sm font-medium text-indigo-600 transition hover:text-indigo-800"
         >
           Ver todos
           <ArrowUpRight size={16} />
-        </a>
+        </Link>
       </div>
 
       <div className="overflow-x-auto">
@@ -96,8 +113,11 @@ export async function RecentTickets() {
           <thead className="bg-slate-50 text-xs uppercase text-slate-500">
             <tr>
               <th className="px-6 py-4 font-medium">Chamado</th>
+
               <th className="px-6 py-4 font-medium">Solicitante</th>
+
               <th className="px-6 py-4 font-medium">Prioridade</th>
+
               <th className="px-6 py-4 font-medium">Status</th>
             </tr>
           </thead>
@@ -106,13 +126,15 @@ export async function RecentTickets() {
             {tickets.map((ticket) => (
               <tr key={ticket.id} className="transition hover:bg-slate-50">
                 <td className="px-6 py-4">
-                  <span className="block text-xs font-medium text-indigo-600">
-                    #{ticket.id.slice(-6).toUpperCase()}
-                  </span>
+                  <Link href={`/tickets/${ticket.id}`} className="group block">
+                    <span className="block text-xs font-medium text-indigo-600">
+                      #{ticket.id.slice(-6).toUpperCase()}
+                    </span>
 
-                  <span className="mt-1 block text-sm font-medium text-slate-900">
-                    {ticket.title}
-                  </span>
+                    <span className="mt-1 block text-sm font-medium text-slate-900 transition group-hover:text-indigo-600">
+                      {ticket.title}
+                    </span>
+                  </Link>
                 </td>
 
                 <td className="px-6 py-4 text-sm text-slate-600">

@@ -99,6 +99,12 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
     Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
 
   const where = {
+    ...(session.user.role === "USER"
+      ? {
+          requesterId: session.user.id,
+        }
+      : {}),
+
     ...(status
       ? {
           status: status as TicketStatus,

@@ -55,6 +55,7 @@ export async function createComment(
         },
         select: {
           id: true,
+          requesterId: true,
         },
       }),
     ]);
@@ -70,6 +71,18 @@ export async function createComment(
       return {
         success: false,
         message: "Chamado não encontrado.",
+      };
+    }
+
+    const canComment =
+      session.user.role === "ADMIN" ||
+      session.user.role === "AGENT" ||
+      ticket.requesterId === session.user.id;
+
+    if (!canComment) {
+      return {
+        success: false,
+        message: "Você não possui acesso a este chamado.",
       };
     }
 

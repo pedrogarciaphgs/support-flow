@@ -90,7 +90,12 @@ export default async function Home() {
             ))}
           </div>
 
-          <RecentTickets />
+          <RecentTickets
+            user={{
+              id: session.user.id,
+              role: session.user.role,
+            }}
+          />
         </div>
       </section>
     </main>

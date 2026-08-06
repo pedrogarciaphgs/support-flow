@@ -40,6 +40,10 @@ export default async function UsersPage() {
   if (!session?.user) {
     redirect("/login");
   }
+
+  if (session.user.role !== "ADMIN") {
+    redirect("/");
+  }
   const users = await prisma.user.findMany({
     orderBy: {
       createdAt: "desc",

@@ -160,6 +160,14 @@ export default async function TicketDetailsPage({
   if (!ticket) {
     notFound();
   }
+  const canViewTicket =
+    session.user.role === "ADMIN" ||
+    session.user.role === "AGENT" ||
+    ticket.requesterId === session.user.id;
+
+  if (!canViewTicket) {
+    notFound();
+  }
 
   return (
     <main className="flex min-h-screen bg-slate-100">

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   ChartNoAxesCombined,
@@ -9,14 +10,15 @@ import {
   TicketCheck,
   Users,
 } from "lucide-react";
+
 import { LogoutButton } from "@/components/auth/logout-button";
 
-import Link from "next/link";
+type UserRole = "ADMIN" | "AGENT" | "USER";
 
 type SidebarProps = {
   user: {
     name: string;
-    role: "ADMIN" | "AGENT" | "USER";
+    role: UserRole;
   };
 };
 
@@ -35,6 +37,7 @@ const menuItems = [
     label: "Usuários",
     icon: Users,
     href: "/users",
+    adminOnly: true,
   },
   {
     label: "Relatórios",
@@ -48,10 +51,25 @@ const menuItems = [
   },
 ];
 
+function formatRole(role: UserRole) {
+  const labels = {
+    ADMIN: "Administrador",
+    AGENT: "Atendente",
+    USER: "Usuário",
+  };
+
+  return labels[role];
+}
+
 export function Sidebar({ user }: SidebarProps) {
   const pathname = usePathname();
+
+  const visibleMenuItems = menuItems.filter(
+    (item) => !item.adminOnly || user.role === "ADMIN",
+  );
+
   return (
-    <aside className="flex min-h-screen w-64 flex-col bg-slate-950 px-4 py-6 text-white">
+    <aside className="flex min-h-screen w-64 shrink-0 flex-col bg-slate-950 px-4 py-6 text-white">
       <div className="mb-10 flex items-center gap-3 px-2">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600">
           <TicketCheck size={22} />
@@ -61,24 +79,27 @@ export function Sidebar({ user }: SidebarProps) {
       </div>
 
       <div className="mb-8 flex items-center gap-3 rounded-xl bg-slate-900 p-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-700">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-700">
           <CircleUserRound size={22} />
         </div>
 
-        <div>
-          <p className="text-sm font-semibold">{user.name}</p>
-          <span className="text-xs text-indigo-300">{user.role}</span>
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold">{user.name}</p>
+
+          <span className="text-xs text-indigo-300">
+            {formatRole(user.role)}
+          </span>
         </div>
       </div>
 
       <nav className="space-y-2">
-        {menuItems.map(({ label, icon: Icon, href }) => {
+        {visibleMenuItems.map(({ label, icon: Icon, href }) => {
           const isActive =
             href === "/" ? pathname === "/" : pathname.startsWith(href);
 
           return (
             <Link
-              key={label}
+              key={href}
               href={href}
               className={`flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-sm transition ${
                 isActive
@@ -92,6 +113,7 @@ export function Sidebar({ user }: SidebarProps) {
           );
         })}
       </nav>
+
       <div className="mt-auto pt-6">
         <LogoutButton />
       </div>
