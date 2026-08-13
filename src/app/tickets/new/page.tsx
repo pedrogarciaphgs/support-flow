@@ -1,13 +1,12 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
+import { auth } from "@/auth";
 import { Sidebar } from "@/components/layout/sidebar";
 import { CreateTicketForm } from "@/components/tickets/create-ticket-form";
-import { redirect } from "next/navigation";
 
-import { auth } from "@/auth";
-
-export async function NewTicketPage() {
+export default async function NewTicketPage() {
   const session = await auth();
 
   if (!session?.user) {

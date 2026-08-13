@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  ChartNoAxesCombined,
   CircleUserRound,
   LayoutDashboard,
   Settings,
@@ -22,7 +21,14 @@ type SidebarProps = {
   };
 };
 
-const menuItems = [
+type MenuItem = {
+  label: string;
+  icon: React.ElementType;
+  href: string;
+  allowedRoles?: UserRole[];
+};
+
+const menuItems: MenuItem[] = [
   {
     label: "Dashboard",
     icon: LayoutDashboard,
@@ -37,12 +43,7 @@ const menuItems = [
     label: "Usuários",
     icon: Users,
     href: "/users",
-    adminOnly: true,
-  },
-  {
-    label: "Relatórios",
-    icon: ChartNoAxesCombined,
-    href: "/reports",
+    allowedRoles: ["ADMIN"],
   },
   {
     label: "Configurações",
@@ -52,7 +53,7 @@ const menuItems = [
 ];
 
 function formatRole(role: UserRole) {
-  const labels = {
+  const labels: Record<UserRole, string> = {
     ADMIN: "Administrador",
     AGENT: "Atendente",
     USER: "Usuário",
@@ -64,9 +65,13 @@ function formatRole(role: UserRole) {
 export function Sidebar({ user }: SidebarProps) {
   const pathname = usePathname();
 
-  const visibleMenuItems = menuItems.filter(
-    (item) => !item.adminOnly || user.role === "ADMIN",
-  );
+  const visibleMenuItems = menuItems.filter((item) => {
+    if (!item.allowedRoles) {
+      return true;
+    }
+
+    return item.allowedRoles.includes(user.role);
+  });
 
   return (
     <aside className="flex min-h-screen w-64 shrink-0 flex-col bg-slate-950 px-4 py-6 text-white">
