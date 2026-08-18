@@ -1,10 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-
-import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+
 import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 
 const updateTicketSchema = z.object({
   ticketId: z.string().min(1, "Chamado inválido."),
@@ -25,7 +25,7 @@ export async function updateTicket(
 ): Promise<UpdateTicketState> {
   const session = await auth();
 
-  if (!session?.user) {
+  if (!session?.user?.id) {
     return {
       success: false,
       message: "Você precisa estar autenticado.",
@@ -38,6 +38,7 @@ export async function updateTicket(
       message: "Você não possui permissão para atualizar chamados.",
     };
   }
+
   const parsedData = updateTicketSchema.safeParse({
     ticketId: formData.get("ticketId"),
     status: formData.get("status"),
@@ -58,6 +59,8 @@ export async function updateTicket(
       },
       select: {
         id: true,
+        status: true,
+        assignedToId: true,
       },
     });
 
@@ -89,15 +92,53 @@ export async function updateTicket(
       }
     }
 
-    await prisma.ticket.update({
-      where: {
-        id: ticket.id,
-      },
+    const newAssignedToId = parsedData.data.assignedToId ?? null;
 
-      data: {
-        status: parsedData.data.status,
-        assignedToId: parsedData.data.assignedToId ?? null,
-      },
+    const historyEntries: {
+      ticketId: string;
+      userId: string;
+      action: string;
+      oldValue: string | null;
+      newValue: string | null;
+    }[] = [];
+
+    if (ticket.status !== parsedData.data.status) {
+      historyEntries.push({
+        ticketId: ticket.id,
+        userId: session.user.id,
+        action: "STATUS_CHANGED",
+        oldValue: ticket.status,
+        newValue: parsedData.data.status,
+      });
+    }
+
+    if (ticket.assignedToId !== newAssignedToId) {
+      historyEntries.push({
+        ticketId: ticket.id,
+        userId: session.user.id,
+        action: "ASSIGNEE_CHANGED",
+        oldValue: ticket.assignedToId,
+        newValue: newAssignedToId,
+      });
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.ticket.update({
+        where: {
+          id: ticket.id,
+        },
+
+        data: {
+          status: parsedData.data.status,
+          assignedToId: newAssignedToId,
+        },
+      });
+
+      if (historyEntries.length > 0) {
+        await tx.ticketHistory.createMany({
+          data: historyEntries,
+        });
+      }
     });
 
     revalidatePath("/");
