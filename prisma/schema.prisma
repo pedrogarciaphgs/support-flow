@@ -36,9 +36,10 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  createdTickets  Ticket[]  @relation("CreatedTickets")
-  assignedTickets Ticket[]  @relation("AssignedTickets")
+  createdTickets  Ticket[]        @relation("CreatedTickets")
+  assignedTickets Ticket[]        @relation("AssignedTickets")
   comments        Comment[]
+  ticketHistories TicketHistory[]
 }
 
 model Ticket {
@@ -57,7 +58,8 @@ model Ticket {
   assignedToId String?
   assignedTo   User?   @relation("AssignedTickets", fields: [assignedToId], references: [id], onDelete: SetNull)
 
-  comments Comment[]
+  comments        Comment[]
+  ticketHistories TicketHistory[]
 
   @@index([requesterId])
   @@index([assignedToId])
@@ -79,4 +81,20 @@ model Comment {
 
   @@index([authorId])
   @@index([ticketId])
+}
+
+model TicketHistory {
+  id        String   @id @default(cuid())
+  ticketId  String
+  userId    String
+  action    String
+  oldValue  String?
+  newValue  String?
+  createdAt DateTime @default(now())
+
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId])
+  @@index([userId])
 }
