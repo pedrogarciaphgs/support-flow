@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { User, Shield, Settings2 } from "lucide-react";
+import { ChangePasswordForm } from "@/components/settings/change-password-form";
 
 import { auth } from "@/auth";
 import { Sidebar } from "@/components/layout/sidebar";
@@ -93,6 +94,7 @@ export default async function SettingsPage() {
                 Em breve você poderá alterar suas preferências por aqui.
               </p>
             </div>
+            <ChangePasswordForm />
 
             {isAdmin && (
               <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-2">
